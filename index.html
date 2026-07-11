@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Save the Date · Ilja & Jeroen · 23 april 2027</title>
+<style>
+  :root{
+    --water:#3b7ea1;
+    --water2:#4f95b8;
+    --deep:#2b5f7c;
+    --cream:#f5ead6;
+    --navy:#16323f;
+    --sun:#ffcf5c;
+    --coral:#e8785b;
+    --white:#fdf8ee;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:
+      radial-gradient(circle at 50% -10%, #7fc0d8 0%, #4f95b8 45%, #2b5f7c 100%);
+    font-family:"Courier New",Courier,monospace;
+    color:var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:16px;
+    overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .frame{
+    width:100%;
+    max-width:820px;
+    text-align:center;
+  }
+  h1.top{
+    font-size:clamp(20px,5vw,34px);
+    letter-spacing:2px;
+    color:var(--cream);
+    text-shadow:2px 2px 0 #16323f;
+    margin-bottom:2px;
+  }
+  .sub{
+    font-size:clamp(11px,2.6vw,15px);
+    color:#dfeef5;
+    letter-spacing:1px;
+    margin-bottom:12px;
+    text-shadow:1px 1px 0 #16323f;
+  }
+  .stage{
+    position:relative;
+    width:100%;
+    border:4px solid var(--navy);
+    border-radius:10px;
+    box-shadow:0 10px 0 rgba(0,0,0,.25), inset 0 0 0 2px rgba(255,255,255,.15);
+    overflow:hidden;
+    background:#3b7ea1;
+    image-rendering:pixelated;
+  }
+  canvas{display:block;width:100%;height:auto;image-rendering:pixelated;}
+
+  .overlay{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    text-align:center;
+    padding:18px;
+    background:rgba(22,50,63,.62);
+    backdrop-filter:blur(1px);
+  }
+  .overlay.hidden{display:none;}
+  .panel{
+    background:var(--cream);
+    color:var(--navy);
+    border:4px solid var(--navy);
+    border-radius:8px;
+    padding:16px 18px;
+    max-width:380px;
+    box-shadow:0 6px 0 rgba(0,0,0,.3);
+  }
+  .panel h2{
+    font-size:clamp(16px,4.4vw,22px);
+    letter-spacing:1px;
+    margin-bottom:8px;
+  }
+  .panel p{font-size:clamp(11px,2.8vw,14px);line-height:1.5;margin-bottom:6px;}
+  .keys{font-size:11px;opacity:.75;margin-top:10px;line-height:1.7;}
+  .btn{
+    display:inline-block;
+    margin-top:12px;
+    background:var(--coral);
+    color:var(--white);
+    border:3px solid var(--navy);
+    border-radius:6px;
+    padding:10px 20px;
+    font-family:inherit;
+    font-weight:bold;
+    font-size:14px;
+    letter-spacing:1px;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--navy);
+    transition:transform .05s;
+  }
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--navy);}
+  .btn.alt{background:var(--water);margin-left:6px;}
+
+  /* Win card */
+  .card h2{font-size:clamp(20px,5.5vw,30px);color:var(--coral);margin-bottom:2px;}
+  .card .amp{color:var(--water);}
+  .card .date{
+    font-size:clamp(22px,6.5vw,40px);
+    font-weight:bold;
+    letter-spacing:2px;
+    color:var(--navy);
+    margin:8px 0 4px;
+  }
+  .card .venue{font-size:clamp(12px,3vw,16px);font-weight:bold;letter-spacing:1px;}
+  .card .place{font-size:11px;opacity:.8;margin-top:2px;}
+  .card .foot{font-size:11px;margin-top:12px;opacity:.85;font-style:italic;}
+
+  .hud{
+    position:absolute;top:8px;left:0;right:0;
+    display:flex;justify-content:space-between;
+    padding:0 12px;
+    font-size:12px;font-weight:bold;
+    letter-spacing:1px;
+    color:var(--cream);
+    text-shadow:1px 1px 0 #16323f;
+    pointer-events:none;
+  }
+  .credit{margin-top:12px;font-size:11px;color:#d6e9f1;letter-spacing:1px;opacity:.85;}
+  .heart{color:var(--coral);}
+</style>
+</head>
+<body>
+<div class="frame">
+  <h1 class="top">ILJA <span class="heart">♥</span> JEROEN</h1>
+  <div class="sub">Vaar mee naar de veerpont... en houd deze datum vrij!</div>
+
+  <div class="stage">
+    <canvas id="game" width="400" height="300"></canvas>
+    <div class="hud">
+      <span id="dist">Afstand tot de Ferry: 100%</span>
+      <span id="bump" style="visibility:hidden">Botsing!</span>
+    </div>
+
+    <!-- START -->
+    <div class="overlay" id="startScreen">
+      <div class="panel">
+        <h2>⛴️ Save the Date</h2>
+        <p>Ilja &amp; Jeroen gaan trouwen op een oude veerpont!</p>
+        <p>Loods hun bootje langs de obstakels en bereik de <b>Ferry</b> om de datum te onthullen.</p>
+        <div class="keys">
+          🖥️ Pijltjes ← → of ↑ ↓ &nbsp;·&nbsp; 📱 Tik / sleep links of rechts<br>
+          Je hebt 4 hartjes ♥♥♥♥ — een botsing kost er één!
+        </div>
+        <button class="btn" id="startBtn">🚤 Start de reis</button>
+      </div>
+    </div>
+
+    <!-- CRASH -->
+    <div class="overlay hidden" id="overScreen">
+      <div class="panel">
+        <h2>💦 Plons!</h2>
+        <p id="overMsg">Bijna! Het bootje botste. Probeer het nog eens.</p>
+        <button class="btn" id="retryBtn">🔁 Opnieuw varen</button>
+      </div>
+    </div>
+
+    <!-- WIN -->
+    <div class="overlay hidden" id="winScreen">
+      <div class="panel card">
+        <h2>Ilja <span class="amp">&amp;</span> Jeroen</h2>
+        <p style="letter-spacing:2px;font-size:12px;">GAAN TROUWEN</p>
+        <div class="date">23 · 04 · 2027</div>
+        <div class="venue">Restaurant Ferry Amsterdam</div>
+        <div class="place">Een 100 jaar oude veerpont · Houthavens, Amsterdam</div>
+        <div class="foot">Houd deze datum vrij — uitnodiging volgt! ⛴️♥</div>
+        <button class="btn alt" id="playAgainBtn">🔁 Nog een keer varen</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="credit">Vrijdag 23 april 2027 · aan het water in Amsterdam</div>
+</div>
+
+<script>
+const cv = document.getElementById('game');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+ctx.imageSmoothingEnabled = false;
+
+const startScreen = document.getElementById('startScreen');
+const overScreen  = document.getElementById('overScreen');
+const winScreen   = document.getElementById('winScreen');
+const distEl      = document.getElementById('dist');
+const bumpEl      = document.getElementById('bump');
+const overMsg     = document.getElementById('overMsg');
+
+let state = 'start';       // start | play | over | win
+let boat, obstacles, wake, waterOffset, progress, spawnTimer, speed, tick, hitFlash;
+let lives, invuln;
+const GOAL = 1600;          // "distance" units to reach the ferry
+let ferryY;                 // ferry approach position (screen)
+
+const crashLines = [
+  "Alle hartjes op! Het bootje kapseisde net voor de finish. Probeer het nog eens.",
+  "Man overboord! De liefde houdt stand, maar dit potje niet. Nog een poging?",
+  "Zelfs op zee gaat trouwen met vallen en opstaan. Opnieuw!",
+  "Te veel eendjes gekruist! Nog een keer varen naar de Ferry?"
+];
+
+function reset(){
+  boat = { x: W/2, y: H-52, w: 30, h: 22, tilt:0 };
+  obstacles = [];
+  wake = [];
+  waterOffset = 0;
+  progress = 0;
+  spawnTimer = 40;
+  speed = 1.6;
+  tick = 0;
+  hitFlash = 0;
+  ferryY = -80;
+  lastSpawnX = W/2;
+  lives = 4;
+  invuln = 0;
+}
+
+/* ---------- input ---------- */
+const keys = {};
+addEventListener('keydown', e=>{
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key)) e.preventDefault();
+  keys[e.key]=true;
+});
+addEventListener('keyup', e=>{ keys[e.key]=false; });
+
+// touch: steer toward touch x
+let touchX = null;
+function stageToCanvasX(clientX){
+  const r = cv.getBoundingClientRect();
+  return (clientX - r.left) / r.width * W;
+}
+cv.addEventListener('touchstart', e=>{ touchX = stageToCanvasX(e.touches[0].clientX); }, {passive:true});
+cv.addEventListener('touchmove',  e=>{ touchX = stageToCanvasX(e.touches[0].clientX); e.preventDefault(); }, {passive:false});
+cv.addEventListener('touchend',   ()=>{ touchX = null; }, {passive:true});
+// mouse steer on desktop too
+cv.addEventListener('mousedown', e=>{ if(state==='play') touchX = stageToCanvasX(e.clientX); });
+cv.addEventListener('mousemove', e=>{ if(touchX!==null) touchX = stageToCanvasX(e.clientX); });
+addEventListener('mouseup', ()=>{ touchX = null; });
+
+/* ---------- obstacles ---------- */
+const TYPES = ['buoy','log','duck','ring'];
+let lastSpawnX = W/2;
+function spawn(){
+  const type = TYPES[(Math.random()*TYPES.length)|0];
+  const size = type==='log' ? 40 : (type==='duck'?18:24);
+  // keep a passable gap: place the new obstacle away from the previous one's column
+  let x, tries=0;
+  do{
+    x = 18 + Math.random()*(W-36-size);
+    tries++;
+  } while(Math.abs((x+size/2) - lastSpawnX) < 60 && tries < 8);
+  lastSpawnX = x + size/2;
+  obstacles.push({ x, y:-size, w:size, h:type==='log'?16:size, type, bob:Math.random()*6.28 });
+}
+
+/* ---------- update ---------- */
+function update(){
+  tick++;
+  waterOffset = (waterOffset + speed) % 16;
+
+  // steering
+  const acc = 0.9, max = 4.2;
+  let vx = 0;
+  if(keys['ArrowLeft'])  vx -= acc*3;
+  if(keys['ArrowRight']) vx += acc*3;
+  if(keys['ArrowUp'])    boat.y -= 2.2;
+  if(keys['ArrowDown'])  boat.y += 2.2;
+  if(touchX!==null){
+    const d = touchX - boat.x;
+    vx += Math.max(-max, Math.min(max, d*0.18));
+  }
+  boat.x += Math.max(-max*3, Math.min(max*3, vx));
+  boat.tilt += ((vx*0.03) - boat.tilt)*0.2;
+  boat.x = Math.max(16+boat.w/2, Math.min(W-16-boat.w/2, boat.x));
+  boat.y = Math.max(H*0.42, Math.min(H-30, boat.y));
+
+  // wake trail
+  if(tick%3===0) wake.push({x:boat.x, y:boat.y+8, life:18});
+  wake.forEach(p=>p.life--);
+  wake = wake.filter(p=>p.life>0);
+
+  // progress + difficulty
+  progress += speed;
+  speed = 1.5 + (progress/GOAL)*1.05;
+  const pct = Math.max(0, Math.min(100, Math.round((1-progress/GOAL)*100)));
+  distEl.textContent = 'Afstand tot de Ferry: '+pct+'%';
+  bumpEl.style.visibility = 'visible';
+  bumpEl.textContent = '♥'.repeat(Math.max(0,lives)) + '♡'.repeat(Math.max(0,4-lives));
+
+  // ferry appears near the end
+  const nearEnd = progress > GOAL-260;
+  if(nearEnd){
+    ferryY += speed*0.9;
+  }
+
+  // spawn (stop spawning once ferry is coming in)
+  spawnTimer -= speed;
+  if(!nearEnd && spawnTimer<=0){
+    spawn();
+    spawnTimer = 90 - Math.min(24, progress/80);
+  }
+
+  // move obstacles
+  obstacles.forEach(o=>{ o.y += speed; o.bob += 0.08; });
+  obstacles = obstacles.filter(o=>o.y < H+50);
+
+  // collision (only when not briefly invulnerable)
+  if(invuln>0) invuln--;
+  else {
+    for(let i=obstacles.length-1;i>=0;i--){
+      const o=obstacles[i];
+      const ox = o.x + o.w/2, oy = o.y + o.h/2 + Math.sin(o.bob)*2;
+      const dx = Math.abs(ox - boat.x), dy = Math.abs(oy - boat.y);
+      if(dx < (o.w/2 + boat.w/2 - 8) && dy < (o.h/2 + boat.h/2 - 6)){
+        obstacles.splice(i,1);   // knock the obstacle aside
+        loseLife();
+        break;
+      }
+    }
+  }
+
+  // win when ferry has slid into view and progress complete
+  if(nearEnd && ferryY > boat.y - 70){
+    win();
+  }
+
+  if(hitFlash>0) hitFlash--;
+}
+
+function loseLife(){
+  lives--;
+  hitFlash = 14;
+  invuln = 60;                 // ~1s of grace after a bump
+  if(lives<=0) crash();
+}
+
+function crash(){
+  state='over';
+  overMsg.textContent = crashLines[(Math.random()*crashLines.length)|0];
+  overScreen.classList.remove('hidden');
+}
+function win(){
+  state='win';
+  winScreen.classList.remove('hidden');
+  confettiBurst();
+}
+
+/* ---------- drawing ---------- */
+function drawWater(){
+  ctx.fillStyle = '#3b7ea1';
+  ctx.fillRect(0,0,W,H);
+  // depth gradient stripes
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#2b5f7c'); g.addColorStop(1,'#4f95b8');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  // pixel wave rows
+  ctx.fillStyle='rgba(255,255,255,.10)';
+  for(let y=-16; y<H; y+=16){
+    const yy = y + waterOffset;
+    for(let x=(Math.floor(yy)%32===0?0:16); x<W; x+=32){
+      ctx.fillRect(x, yy, 8, 3);
+    }
+  }
+  ctx.fillStyle='rgba(255,255,255,.06)';
+  for(let y=-16; y<H; y+=24){
+    const yy=(y+waterOffset*0.6);
+    for(let x=8; x<W; x+=40){ ctx.fillRect(x,yy,12,2); }
+  }
+}
+
+function px(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(x|0,y|0,w,h); }
+
+function drawBoat(){
+  // blink while briefly invulnerable after a bump
+  if(invuln>0 && Math.floor(tick/5)%2===0) return;
+  ctx.save();
+  ctx.translate(boat.x, boat.y);
+  ctx.rotate(boat.tilt);
+  const c = -boat.w/2;
+  // hull
+  px(c+2, 2, boat.w-4, 8, '#8a4b2a');
+  px(c, 4, boat.w, 6, '#a35c34');
+  px(c+4, 0, boat.w-8, 3, '#c9803f');
+  // deck seat
+  px(c+6, -2, boat.w-12, 3, '#6d3a20');
+  // two little people (Ilja & Jeroen)
+  // person 1
+  px(c+8, -12, 5, 8, '#e8785b');  // body
+  px(c+8, -16, 5, 4, '#f0c9a0');  // head
+  px(c+8, -19, 5, 3, '#3a2a1a');  // hair
+  // person 2
+  px(c+16, -12, 5, 8, '#f5ead6'); // body (dress/shirt)
+  px(c+16, -16, 5, 4, '#f0c9a0'); // head
+  px(c+16, -19, 5, 3, '#5a3a22');
+  // tiny heart between them
+  if(Math.floor(tick/20)%2===0){ px(c+13, -22, 2,2,'#ffd0d0'); }
+  // flag pole
+  px(c+boat.w/2-1, -26, 2, 8, '#3a2a1a');
+  px(c+boat.w/2+1, -26, 6, 4, '#ffcf5c');
+  ctx.restore();
+}
+
+function drawObstacle(o){
+  const y = o.y + Math.sin(o.bob)*2;
+  if(o.type==='buoy'){
+    px(o.x+2, y, o.w-4, o.h, '#e8785b');
+    px(o.x+2, y+o.h*0.4, o.w-4, 3, '#fdf8ee');
+    px(o.x+o.w/2-1, y-4, 2, 4, '#333');
+    px(o.x, y+o.h-4, o.w, 4, 'rgba(255,255,255,.25)');
+  } else if(o.type==='log'){
+    px(o.x, y+2, o.w, o.h-4, '#6d4a2a');
+    px(o.x, y+4, o.w, 3, '#805734');
+    px(o.x+3, y+2, 4, o.h-4, '#573a1f');
+    px(o.x+o.w-6, y+2, 4, o.h-4, '#573a1f');
+  } else if(o.type==='duck'){
+    px(o.x+2, y+4, o.w-2, o.h-6, '#f4d03f');   // body
+    px(o.x+o.w-6, y, 6, 6, '#f4d03f');          // head
+    px(o.x+o.w-2, y+2, 3, 2, '#e8785b');        // beak
+    px(o.x+o.w-4, y+2, 1, 1, '#222');           // eye
+    px(o.x, y+o.h-3, o.w, 3, 'rgba(255,255,255,.2)');
+  } else { // ring / life buoy
+    ctx.strokeStyle='#fdf8ee'; ctx.lineWidth=4;
+    ctx.strokeRect(o.x+2, y+2, o.w-4, o.h-4);
+    ctx.strokeStyle='#e8785b'; ctx.lineWidth=2;
+    ctx.strokeRect(o.x+4, y+4, o.w-8, o.h-8);
+  }
+}
+
+function drawFerry(){
+  // big cream ferry sliding down from top = the goal
+  const fx = W/2 - 90, fy = ferryY;
+  const w = 180, h = 70;
+  // reflection glow
+  px(fx-6, fy+h-6, w+12, 10, 'rgba(253,248,238,.25)');
+  // hull
+  px(fx, fy+h-22, w, 22, '#16323f');
+  px(fx-6, fy+h-14, w+12, 8, '#0f2530');
+  // deck / cabin
+  px(fx+10, fy+8, w-20, h-24, '#f5ead6');
+  px(fx+10, fy+8, w-20, 6, '#e6d6b6');
+  // windows
+  for(let i=0;i<6;i++){ px(fx+22+i*24, fy+22, 14, 12, '#8fd0e6'); }
+  // roof + funnel
+  px(fx+24, fy, w-48, 10, '#e8785b');
+  px(fx+w/2-8, fy-16, 16, 18, '#16323f');
+  px(fx+w/2-8, fy-16, 16, 5, '#e8785b');
+  // banner
+  ctx.fillStyle='#16323f';
+  ctx.font='bold 13px "Courier New", monospace';
+  ctx.textAlign='center';
+  ctx.fillText('FERRY', W/2, fy+40);
+  ctx.textAlign='left';
+}
+
+function draw(){
+  drawWater();
+  // wake
+  wake.forEach(p=>{
+    ctx.fillStyle='rgba(255,255,255,'+(p.life/40)+')';
+    ctx.fillRect(p.x-6, p.y+(18-p.life), 3,3);
+    ctx.fillRect(p.x+3, p.y+(18-p.life), 3,3);
+  });
+  obstacles.forEach(drawObstacle);
+  if(progress > GOAL-260) drawFerry();
+  drawBoat();
+
+  if(hitFlash>0){
+    ctx.fillStyle='rgba(255,255,255,'+(hitFlash/20)+')';
+    ctx.fillRect(0,0,W,H);
+  }
+}
+
+/* confetti on win (drawn over final frame, purely cosmetic) */
+let confetti=[];
+function confettiBurst(){
+  confetti=[];
+  const cols=['#e8785b','#ffcf5c','#f5ead6','#8fd0e6','#ffd0d0'];
+  for(let i=0;i<80;i++){
+    confetti.push({x:Math.random()*W, y:-Math.random()*H, s:2+Math.random()*3,
+      vy:1+Math.random()*2.4, vx:-1+Math.random()*2, c:cols[(Math.random()*cols.length)|0]});
+  }
+}
+function drawConfetti(){
+  confetti.forEach(p=>{ p.y+=p.vy; p.x+=p.vx; if(p.y>H){p.y=-6;p.x=Math.random()*W;}
+    ctx.fillStyle=p.c; ctx.fillRect(p.x|0,p.y|0,p.s,p.s); });
+}
+
+/* ---------- loop ---------- */
+function loop(){
+  if(state==='play'){ update(); draw(); }
+  else if(state==='win'){ draw(); drawConfetti(); }
+  requestAnimationFrame(loop);
+}
+
+/* ---------- buttons ---------- */
+function startGame(){
+  reset();
+  state='play';
+  startScreen.classList.add('hidden');
+  overScreen.classList.add('hidden');
+  winScreen.classList.add('hidden');
+}
+document.getElementById('startBtn').onclick   = startGame;
+document.getElementById('retryBtn').onclick   = startGame;
+document.getElementById('playAgainBtn').onclick= startGame;
+
+reset();
+draw();
+loop();
+</script>
+</body>
+</html>
